@@ -1,0 +1,16 @@
+{
+  "name": "liferay-plugin-tasks",
+  "version": "0.0.0",
+  "description": "A set of base tasks for deploying plugins to Liferay Portal",
+  "main": "index.js",
+  "scripts": {
+    "test": "gulp test"
+  },
+  "keywords": [
+    "liferay",
+    "plugin",
+    "deploy"
+  ],
+  "author": "Rob Frampton <rob.g.frampton@gmail.com> (https://github.com/Robert-Frampton)",
+  "license": "MIT"
+}
