@@ -24,7 +24,7 @@ module.exports.registerTasks = function(options) {
 	gulp.task('plugin:deploy', ['plugin:war'], function() {
 		var deployPath = store.get('deployPath');
 
-		var stream = gulp.src(path.join(pathDist, '*.war'))
+		var stream = gulp.src(path.join(pathDist, name + '.war'))
 			.pipe(gulp.dest(deployPath));
 
 		gutil.log('Deploying to ' + gutil.colors.cyan(deployPath));
