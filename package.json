@@ -12,5 +12,21 @@
     "deploy"
   ],
   "author": "Rob Frampton <rob.g.frampton@gmail.com> (https://github.com/Robert-Frampton)",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "gulp-storage": "^1.0.6",
+    "gulp-util": "^3.0.7",
+    "gulp-zip": "^3.2.0",
+    "inquirer": "^0.12.0",
+    "lodash": "^4.6.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-fs": "^0.1.0",
+    "fs-extra": "^0.26.7",
+    "gulp-istanbul": "^0.10.3",
+    "gulp-mocha": "^2.2.0",
+    "run-sequence": "^1.1.5",
+    "sinon": "^1.17.3"
+  }
 }
