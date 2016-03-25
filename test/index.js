@@ -116,4 +116,25 @@ describe('Lifray Plugin Tasks', function() {
 			});
 		});
 	});
+
+	describe('registerTasks', function() {
+		it('should invoke ext functions', function(done) {
+			gulp = new Gulp();
+
+			var extFunction = function(options) {
+				assert.deepEqual(options, {
+					gulp: gulp,
+					name: 'liferay-plugin-tasks',
+					pathDist: 'dist',
+					rootDir: 'docroot'
+				});
+
+				done();
+			};
+
+			registerTasks({
+				gulp: gulp
+			})(extFunction);
+		});
+	});
 });

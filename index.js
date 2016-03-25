@@ -1,5 +1,6 @@
 'use strict';
 
+var _ = require('lodash');
 var gutil = require('gulp-util');
 var InitPrompt = require('./lib/init_prompt');
 var path = require('path');
@@ -9,9 +10,9 @@ var zip = require('gulp-zip');
 var CWD = process.cwd();
 
 module.exports.registerTasks = function(options) {
-	var name = options.name || path.basename(CWD);
-	var pathDist = options.pathDist || 'dist';
-	var rootDir = options.rootDir || 'docroot';
+	options.name = options.name || path.basename(CWD);
+	options.pathDist = options.pathDist || 'dist';
+	options.rootDir = options.rootDir || 'docroot';
 
 	var gulp = options.gulp;
 
@@ -24,7 +25,7 @@ module.exports.registerTasks = function(options) {
 	gulp.task('plugin:deploy', ['plugin:war'], function() {
 		var deployPath = store.get('deployPath');
 
-		var stream = gulp.src(path.join(pathDist, name + '.war'))
+		var stream = gulp.src(path.join(options.pathDist, options.name + '.war'))
 			.pipe(gulp.dest(deployPath));
 
 		gutil.log('Deploying to ' + gutil.colors.cyan(deployPath));
@@ -44,8 +45,14 @@ module.exports.registerTasks = function(options) {
 	});
 
 	gulp.task('plugin:war', function() {
-		return gulp.src(path.join(rootDir, '**/*'))
-			.pipe(zip(name + '.war'))
-			.pipe(gulp.dest(pathDist));
+		return gulp.src(path.join(options.rootDir, '**/*'))
+			.pipe(zip(options.name + '.war'))
+			.pipe(gulp.dest(options.pathDist));
 	});
+
+	return function() {
+		_.forEach(arguments, function(ext) {
+			ext(options);
+		});
+	};
 };
