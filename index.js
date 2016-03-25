@@ -4,6 +4,7 @@ var _ = require('lodash');
 var gutil = require('gulp-util');
 var InitPrompt = require('./lib/init_prompt');
 var path = require('path');
+var RegisterHooks = require('./lib/register_hooks');
 var storage = require('gulp-storage');
 var zip = require('gulp-zip');
 
@@ -16,11 +17,18 @@ module.exports.registerTasks = function(options) {
 
 	var gulp = options.gulp;
 
+	gulp.tasks = {};
+
+	RegisterHooks.hook(gulp, {
+		hookFn: options.hookFn,
+		hookModules: options.hookModules
+	});
+
 	storage(gulp);
 
 	var store = gulp.storage;
 
-	store.create('LiferayPlugin', 'liferay-plugin.json');
+	store.create('LiferayPlugin', path.join(process.cwd(), 'liferay-plugin.json'));
 
 	gulp.task('plugin:deploy', ['plugin:war'], function() {
 		var deployPath = store.get('deployPath');
