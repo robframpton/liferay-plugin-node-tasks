@@ -3,11 +3,13 @@
 var _ = require('lodash');
 var chai = require('chai');
 var fs = require('fs-extra');
-var gulp = require('gulp');
+var Gulp = require('gulp').Gulp;
 var os = require('os');
 var path = require('path');
 var registerTasks = require('../index').registerTasks;
 var sinon = require('sinon');
+
+var gulp = new Gulp();
 
 chai.use(require('chai-fs'));
 var assert = chai.assert;
@@ -55,9 +57,11 @@ describe('Lifray Plugin Tasks', function() {
 	});
 
 	describe('plugin:deploy', function() {
-		it('should pass', function(done) {
+		it('should deploy war file to specified appserver', function(done) {
 			runSequence('plugin:deploy', function() {
 				assert.isFile(path.join(deployPath, 'liferay-plugin-tasks.war'));
+
+				assert(gulp.storage.get('deployed'), 'deployed is set to true');
 
 				done();
 			});
@@ -65,7 +69,7 @@ describe('Lifray Plugin Tasks', function() {
 	});
 
 	describe('plugin:init', function() {
-		it('should pass', function() {
+		it('should prompt user for appserver information', function() {
 			var InitPrompt = require('../lib/init_prompt');
 
 			var _prompt = InitPrompt.prototype._prompt;
@@ -86,9 +90,27 @@ describe('Lifray Plugin Tasks', function() {
 	});
 
 	describe('plugin:war', function() {
-		it('should pass', function(done) {
+		it('should build war file', function(done) {
 			runSequence('plugin:war', function() {
 				assert.isFile(path.join(tempPath, 'dist', 'liferay-plugin-tasks.war'));
+
+				done();
+			});
+		});
+
+		it('should use name for war file and pathDist for alternative dist location', function(done) {
+			gulp = new Gulp();
+
+			registerTasks({
+				gulp: gulp,
+				pathDist: 'dist_alternative',
+				name: 'my-plugin-name'
+			});
+
+			runSequence = require('run-sequence').use(gulp);
+
+			runSequence('plugin:war', function() {
+				assert.isFile(path.join(tempPath, 'dist_alternative', 'my-plugin-name.war'));
 
 				done();
 			});

@@ -29,11 +29,9 @@ module.exports.registerTasks = function(options) {
 
 		gutil.log('Deploying to ' + gutil.colors.cyan(deployPath));
 
-		if (!store.get('deployed')) {
-			stream.on('end', function() {
-				store.set('deployed', true);
-			});
-		}
+		stream.on('end', function() {
+			store.set('deployed', true);
+		});
 
 		return stream;
 	});

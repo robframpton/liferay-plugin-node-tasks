@@ -8,14 +8,15 @@ var sinon = require('sinon');
 
 var assert = chai.assert;
 
-describe('Extend Prompt', function() {
+describe('Init Prompt', function() {
 	var prototype;
 
 	function getDefaultAnswers() {
 		return {
 			appServerPath: path.join(__dirname, '../fixtures/server/tomcat'),
 			deployPath: path.join(__dirname, '../fixtures/server/deploy'),
-			url: 'http://localhost:8080'
+			url: 'http://localhost:8080',
+			webappsPath: path.join(__dirname, '../fixtures/server/tomcat/webapps')
 		};
 	}
 
@@ -46,6 +47,10 @@ describe('Extend Prompt', function() {
 			assert(!_.isUndefined(storeArgs.pluginName), 'themeName is defined');
 
 			assert.equal(prototype.done.callCount, 1, 'done is invoked after store');
+
+			prototype.done = null;
+
+			prototype._afterPrompt(defaultAnswers);
 		});
 	});
 
@@ -89,6 +94,16 @@ describe('Extend Prompt', function() {
 		});
 	});
 
+	describe('_getDefaultDeployPath', function() {
+		it('should return defualy deploy path value based on answers', function() {
+			var defaultPath = prototype._getDefaultDeployPath({
+				appServerPath: '/path-to/appserver/tomcat'
+			});
+
+			assert.equal(path.join('/path-to', 'appserver', 'deploy'), defaultPath);
+		});
+	});
+
 	describe('_normalizeAnswers', function() {
 		it('should normalize prompt answers', function() {
 			var defaultAnswers = getDefaultAnswers();
@@ -102,6 +117,14 @@ describe('Extend Prompt', function() {
 
 			assert.equal(answers.pluginName, 'liferay-plugin-tasks', 'pluginName is root dir of plugin');
 			assert.equal(answers.deployed, false, 'deployed is set to false');
+			assert.equal(answers.appServerPathPlugin, path.join(defaultAnswers.appServerPath, 'webapps/liferay-plugin-tasks'));
+
+			answers = _.assign({}, defaultAnswers);
+
+			answers.appServerPath = defaultAnswers.webappsPath;
+
+			prototype._normalizeAnswers(answers);
+
 			assert.equal(answers.appServerPathPlugin, path.join(defaultAnswers.appServerPath, 'webapps/liferay-plugin-tasks'));
 		});
 	});
@@ -151,6 +174,10 @@ describe('Extend Prompt', function() {
 			retVal = prototype._validateAppServerPath(defaultAnswers.appServerPath);
 
 			assert(retVal, 'path is valid');
+
+			retVal = prototype._validateAppServerPath(defaultAnswers.webappsPath);
+
+			assert(retVal, 'pointing to webapps is valid');
 		});
 	});
 });
