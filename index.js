@@ -11,7 +11,7 @@ var zip = require('gulp-zip');
 var CWD = process.cwd();
 
 module.exports.registerTasks = function(options) {
-	options.name = options.name || path.basename(CWD);
+	options.distName = options.distName || path.basename(CWD);
 	options.pathDist = options.pathDist || 'dist';
 	options.rootDir = options.rootDir || 'docroot';
 
@@ -33,7 +33,7 @@ module.exports.registerTasks = function(options) {
 	gulp.task('plugin:deploy', ['plugin:war'], function() {
 		var deployPath = store.get('deployPath');
 
-		var stream = gulp.src(path.join(options.pathDist, options.name + '.war'))
+		var stream = gulp.src(path.join(options.pathDist, options.distName + '.war'))
 			.pipe(gulp.dest(deployPath));
 
 		gutil.log('Deploying to ' + gutil.colors.cyan(deployPath));
@@ -54,7 +54,7 @@ module.exports.registerTasks = function(options) {
 
 	gulp.task('plugin:war', function() {
 		return gulp.src(path.join(options.rootDir, '**/*'))
-			.pipe(zip(options.name + '.war'))
+			.pipe(zip(options.distName + '.war'))
 			.pipe(gulp.dest(options.pathDist));
 	});
 

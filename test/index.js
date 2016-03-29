@@ -116,9 +116,9 @@ describe('Lifray Plugin Tasks', function() {
 			gulp = new Gulp();
 
 			registerTasks({
+				distName: 'my-plugin-name',
 				gulp: gulp,
-				pathDist: 'dist_alternative',
-				name: 'my-plugin-name'
+				pathDist: 'dist_alternative'
 			});
 
 			runSequence = require('run-sequence').use(gulp);
@@ -137,8 +137,8 @@ describe('Lifray Plugin Tasks', function() {
 
 			var extFunction = function(options) {
 				assert.deepEqual(options, {
+					distName: 'test-plugin-layouttpl',
 					gulp: gulp,
-					name: 'test-plugin-layouttpl',
 					pathDist: 'dist',
 					rootDir: 'docroot'
 				});

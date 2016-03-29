@@ -1,5 +1,5 @@
 {
-  "name": "liferay-plugin-tasks",
+  "name": "liferay-plugin-node-tasks",
   "version": "0.0.0",
   "description": "A set of base tasks for deploying plugins to Liferay Portal",
   "main": "index.js",

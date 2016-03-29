@@ -115,9 +115,9 @@ describe('Init Prompt', function() {
 			assert.equal(answers.deployPath, defaultAnswers.deployPath, 'normalized answer equals what it was passed');
 			assert.equal(answers.url, defaultAnswers.url, 'normalized answer equals what it was passed');
 
-			assert.equal(answers.pluginName, 'liferay-plugin-tasks', 'pluginName is root dir of plugin');
+			assert.equal(answers.pluginName, 'liferay-plugin-node-tasks', 'pluginName is root dir of plugin');
 			assert.equal(answers.deployed, false, 'deployed is set to false');
-			assert.equal(answers.appServerPathPlugin, path.join(defaultAnswers.appServerPath, 'webapps/liferay-plugin-tasks'));
+			assert.equal(answers.appServerPathPlugin, path.join(defaultAnswers.appServerPath, 'webapps/liferay-plugin-node-tasks'));
 
 			answers = _.assign({}, defaultAnswers);
 
@@ -125,7 +125,7 @@ describe('Init Prompt', function() {
 
 			prototype._normalizeAnswers(answers);
 
-			assert.equal(answers.appServerPathPlugin, path.join(defaultAnswers.appServerPath, 'webapps/liferay-plugin-tasks'));
+			assert.equal(answers.appServerPathPlugin, path.join(defaultAnswers.appServerPath, 'webapps/liferay-plugin-node-tasks'));
 		});
 	});
 
