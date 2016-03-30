@@ -3,15 +3,20 @@
   "version": "0.0.1",
   "description": "A set of base tasks for deploying plugins to Liferay Portal",
   "main": "index.js",
-  "scripts": {
-    "test": "gulp test"
-  },
+  "author": "Rob Frampton <rob.g.frampton@gmail.com> (https://github.com/Robert-Frampton)",
+  "repository": "Robert-Frampton/liferay-plugin-node-tasks",
   "keywords": [
     "liferay",
     "plugin",
     "deploy"
   ],
-  "author": "Rob Frampton <rob.g.frampton@gmail.com> (https://github.com/Robert-Frampton)",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "coveralls": "gulp coveralls",
+    "test": "gulp test"
+  },
   "license": "MIT",
   "dependencies": {
     "async": "^2.0.0-rc.2",
@@ -27,6 +32,7 @@
     "del": "^2.2.0",
     "fs-extra": "^0.26.7",
     "gulp": "^3.9.1",
+    "gulp-coveralls": "^0.1.4",
     "gulp-istanbul": "^0.10.3",
     "gulp-mocha": "^2.2.0",
     "run-sequence": "^1.1.5",
