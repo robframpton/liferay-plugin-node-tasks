@@ -31,9 +31,9 @@ module.exports.registerTasks = function(options) {
 
 	var store = gulp.storage;
 
-	store.create('LiferayPlugin', path.join(process.cwd(), 'liferay-plugin.json'));
+	store.create('LiferayPlugin', path.join(CWD, 'liferay-plugin.json'));
 
-	gulp.task('plugin:deploy', ['plugin:war'], function() {
+	gulp.task('plugin:deploy', function() {
 		var deployPath = store.get('deployPath');
 
 		var stream = gulp.src(path.join(options.pathDist, options.distName + '.war'))
