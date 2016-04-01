@@ -3,12 +3,16 @@
 var gutil = require('gulp-util');
 var path = require('path');
 
+var TASK_PLUGIN_DEPLOY = 'plugin:deploy';
+
+var TASK_PLUGIN_DEPLOY_GOGO = 'plugin:deploy-gogo';
+
 module.exports = function(options) {
 	var gulp = options.gulp;
 
 	var store = gulp.storage;
 
-	gulp.task('plugin:deploy', function() {
+	gulp.task(TASK_PLUGIN_DEPLOY, function() {
 		var deployPath = store.get('deployPath');
 
 		var stream = gulp.src(path.join(options.pathDist, options.distName + '.war'))
@@ -23,7 +27,7 @@ module.exports = function(options) {
 		return stream;
 	});
 
-	gulp.task('plugin:deploy-gogo', function(done) {
+	gulp.task(TASK_PLUGIN_DEPLOY_GOGO, function(done) {
 		var contextPath = require(path.join(process.cwd(), 'package.json')).name;
 		var filePath = path.join(process.cwd(), options.pathDist, options.distName + '.war');
 
@@ -36,4 +40,7 @@ module.exports = function(options) {
 				store.set('deployed', true);
 			});
 	});
+
+	gulp.task('deploy', TASK_PLUGIN_DEPLOY);
+	gulp.task('deploy:gogo', TASK_PLUGIN_DEPLOY_GOGO);
 };
