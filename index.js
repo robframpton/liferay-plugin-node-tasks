@@ -5,6 +5,7 @@ var gutil = require('gulp-util');
 var InitPrompt = require('./lib/init_prompt');
 var path = require('path');
 var RegisterHooks = require('./lib/register_hooks');
+var help = require('gulp-help');
 var storage = require('gulp-storage');
 var zip = require('gulp-zip');
 
@@ -23,6 +24,8 @@ module.exports.registerTasks = function(options) {
 		hookFn: options.hookFn,
 		hookModules: options.hookModules
 	});
+
+	gulp = help(options.gulp);
 
 	storage(gulp);
 
