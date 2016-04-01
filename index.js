@@ -48,6 +48,27 @@ module.exports.registerTasks = function(options) {
 		return stream;
 	});
 
+	gulp.task('plugin:deploy-gogo', function(done) {
+		var filePath = path.join(CWD, options.pathDist, options.distName + '.war');
+
+		var gogoDeploy = require('./lib/gogo_deploy');
+
+		var contextPath = require(path.join(CWD, 'package.json')).name;
+
+		gogoDeploy(filePath, contextPath, function(err, data) {
+			if (err) {
+				gutil.log(err);
+			}
+			else {
+				store.set('deployed', true);
+
+				gutil.log('Deploying to local appserver via gogo shell');
+			}
+
+			done();
+		});
+	});
+
 	gulp.task('plugin:init', function(cb) {
 		new InitPrompt({
 			appServerPathDefault: store.get('appServerPath') || path.join(path.dirname(CWD), 'tomcat'),
