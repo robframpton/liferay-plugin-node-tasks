@@ -11,7 +11,7 @@ gulp.task('coveralls', function () {
 });
 
 gulp.task('pre-test', function () {
-	return gulp.src(['index.js', 'lib/*.js'])
+	return gulp.src(['index.js', 'tasks/*.js', 'lib/*.js'])
 		.pipe(istanbul())
 		.pipe(istanbul.hookRequire());
 });

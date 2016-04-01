@@ -72,7 +72,7 @@ describe('Lifray Plugin Tasks', function() {
 
 	describe('plugin:deploy', function() {
 		it('should deploy war file to specified appserver', function(done) {
-			runSequence('plugin:deploy', function() {
+			runSequence('plugin:war', 'plugin:deploy', function() {
 				assert.isFile(path.join(deployPath, 'test-plugin-layouttpl.war'));
 
 				assert(gulp.storage.get('deployed'), 'deployed is set to true');
@@ -185,7 +185,7 @@ describe('Lifray Plugin Tasks', function() {
 
 			runSequence = require('run-sequence').use(gulp);
 
-			runSequence('plugin:deploy', function() {
+			runSequence('plugin:war', 'plugin:deploy', function() {
 				assert.isFile(path.join(deployPath, 'test-plugin-layouttpl.war'));
 
 				assert(gulp.storage.get('deployed'), 'deployed is set to true');
