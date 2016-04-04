@@ -4,6 +4,7 @@ var _ = require('lodash');
 var chai = require('chai');
 var del = require('del');
 var fs = require('fs-extra');
+var GogoShellHelper = require('gogo-shell-helper');
 var Gulp = require('gulp').Gulp;
 var os = require('os');
 var path = require('path');
@@ -37,7 +38,11 @@ describe('Lifray Plugin Tasks', function() {
 			registerTasks = require('../index').registerTasks;
 
 			registerTasks({
-				gulp: gulp
+				gulp: gulp,
+				gogoShellConfig: {
+					host: '0.0.0.0',
+					port: 1337
+				}
 			});
 
 			runSequence = require('run-sequence').use(gulp);
@@ -76,6 +81,77 @@ describe('Lifray Plugin Tasks', function() {
 				assert.isFile(path.join(deployPath, 'test-plugin-layouttpl.war'));
 
 				assert(gulp.storage.get('deployed'), 'deployed is set to true');
+
+				done();
+			});
+		});
+	});
+
+	describe('plugin:deploy-gogo', function() {
+		var helper;
+
+		before(function() {
+			helper = GogoShellHelper.start({
+				dummyData: [
+					{
+						command: 'install webbundle',
+						response: 'Bundle ID: 123'
+					},
+					{
+						command: 'start'
+					}
+				]
+			});
+		});
+
+		after(function() {
+			helper.close();
+		});
+
+		it('should attempt to deploy via gogo shell', function(done) {
+			runSequence('plugin:war', 'plugin:deploy-gogo', function() {
+				done();
+			});
+		});
+
+		it('should log error', function(done) {
+			helper.setDummyData([
+				{
+					command: 'install webbundle'
+				},
+				{
+					command: 'start'
+				}
+			]);
+
+			var gutil = require('gulp-util');
+
+			var log = gutil.log;
+
+			gutil.log = sinon.spy();
+
+			runSequence('plugin:war', 'plugin:deploy-gogo', function() {
+				assert(gutil.log.getCall(0).args[0].indexOf('Something went wrong') > -1);
+
+				gutil.log = log;
+
+				done();
+			});
+		});
+
+		it('should log error due to disconnection', function(done) {
+			helper.close();
+
+			var gutil = require('gulp-util');
+
+			var log = gutil.log;
+
+			gutil.log = sinon.spy();
+
+			runSequence('plugin:war', 'plugin:deploy-gogo', function() {
+				assert(gutil.log.getCall(0).args[0].indexOf('ECONNREFUSED') > -1);
+
+				gutil.log = log;
 
 				done();
 			});

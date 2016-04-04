@@ -3,6 +3,8 @@
 var gutil = require('gulp-util');
 var path = require('path');
 
+var chalk = gutil.colors;
+
 var TASK_PLUGIN_DEPLOY = 'plugin:deploy';
 
 var TASK_PLUGIN_DEPLOY_GOGO = 'plugin:deploy-gogo';
@@ -31,13 +33,38 @@ module.exports = function(options) {
 		var contextPath = require(path.join(process.cwd(), 'package.json')).name;
 		var filePath = path.join(process.cwd(), options.pathDist, options.distName + '.war');
 
-		var GogoDeployer = require('./lib/gogo_deploy').GogoDeployer;
+		var GogoDeployer = require('../lib/gogo_deploy').GogoDeployer;
 
-		new GogoDeployer().deploy(filePath, contextPath)
+		var gogoDeployer = new GogoDeployer({
+			connectConfig: options.gogoShellConfig
+		});
+
+		var finish = function() {
+			gogoDeployer.destroy();
+
+			done();
+		};
+
+		gogoDeployer.on('error', function(err) {
+			gutil.log(chalk.red(err.message));
+
+			finish();
+		});
+
+		gogoDeployer.deploy(filePath, contextPath)
 			.then(function(data) {
-				console.log(data);
+				var match = data.match(/start\s(\d+)/);
 
-				store.set('deployed', true);
+				if (match && match[1] != 0) {
+					store.set('deployed', true);
+
+					gutil.log('Deployed via gogo shell');
+				}
+				else {
+					gutil.log(chalk.red('Something went wrong'));
+				}
+
+				finish();
 			});
 	});
 
