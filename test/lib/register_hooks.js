@@ -4,7 +4,7 @@ var _ = require('lodash');
 var async = require('async');
 var chai = require('chai');
 var EventEmitter = require('events').EventEmitter;
-var gulp = require('gulp');
+var Gulp = require('gulp').Gulp;
 var gutil = require('gulp-util');
 var path = require('path');
 var RegisterHooks = require('../../lib/register_hooks');
@@ -106,9 +106,9 @@ describe('RegisterHooks', function() {
 		});
 
 		it('should create async.series for every task with registered hooks', function(done) {
-			prototype.gulp = gulp;
+			prototype.gulp = new Gulp();
 
-			var runSequence = require('run-sequence').use(gulp);
+			var runSequence = require('run-sequence').use(prototype.gulp);
 
 			var hookSpy = sinon.spy();
 
@@ -159,10 +159,9 @@ describe('RegisterHooks', function() {
 		});
 
 		it('should register deps like normal when hooking task', function(done) {
-			prototype.gulp = gulp;
-			prototype.gulp.tasks = {};
+			prototype.gulp = new Gulp();
 
-			var runSequence = require('run-sequence').use(gulp);
+			var runSequence = require('run-sequence').use(prototype.gulp);
 
 			var hookSpy = sinon.spy();
 
