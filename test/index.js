@@ -105,7 +105,11 @@ describe('Lifray Plugin Tasks', function() {
 		});
 
 		after(function() {
-			helper.close();
+			try {
+				helper.close();
+			}
+			catch (e) {
+			}
 		});
 
 		it('should attempt to deploy via gogo shell', function(done) {
