@@ -157,6 +157,56 @@ describe('RegisterHooks', function() {
 				done();
 			});
 		});
+
+		it('should register deps like normal when hooking task', function(done) {
+			prototype.gulp = gulp;
+			prototype.gulp.tasks = {};
+
+			var runSequence = require('run-sequence').use(gulp);
+
+			var hookSpy = sinon.spy();
+
+			prototype.hooks = {
+				'after:task1': function(cb) {
+					hookSpy('after:task1');
+
+					cb();
+				}
+			};
+
+			prototype._overwriteGulpTask();
+
+			prototype.gulp.task('task1', ['task2', 'task3'], function(cb) {
+				hookSpy('task1');
+
+				cb();
+			});
+
+			prototype.gulp.task('task2', function(cb) {
+				hookSpy('task2');
+
+				cb();
+			});
+
+			prototype.gulp.task('task3', function(cb) {
+				setTimeout(function() {
+					hookSpy('task3');
+
+					cb();
+				}, 200);
+			});
+
+			runSequence(['task1'], function() {
+				assert(hookSpy.getCall(0).calledWith('task2'));
+				assert(hookSpy.getCall(1).calledWith('task3'));
+				assert(hookSpy.getCall(2).calledWith('task1'));
+				assert(hookSpy.getCall(3).calledWith('after:task1'));
+
+				assert.equal(hookSpy.callCount, 4);
+
+				done();
+			});
+		});
 	});
 
 	describe('_registerHookFn', function() {
