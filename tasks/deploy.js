@@ -68,6 +68,6 @@ module.exports = function(options) {
 			});
 	});
 
-	gulp.task('deploy', TASK_PLUGIN_DEPLOY);
-	gulp.task('deploy:gogo', TASK_PLUGIN_DEPLOY_GOGO);
+	gulp.task('deploy', [TASK_PLUGIN_DEPLOY]);
+	gulp.task('deploy:gogo', [TASK_PLUGIN_DEPLOY_GOGO]);
 };

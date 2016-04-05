@@ -17,5 +17,5 @@ module.exports = function(options) {
 		}, cb);
 	});
 
-	gulp.task('init', TASK_PLUGIN_INIT);
+	gulp.task('init', [TASK_PLUGIN_INIT]);
 };
