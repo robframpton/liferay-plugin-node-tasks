@@ -92,7 +92,7 @@ describe('Lifray Plugin Tasks', function() {
 
 		before(function() {
 			helper = GogoShellHelper.start({
-				dummyData: [
+				commands: [
 					{
 						command: 'install webbundle',
 						response: 'Bundle ID: 123'
@@ -119,7 +119,7 @@ describe('Lifray Plugin Tasks', function() {
 		});
 
 		it('should log error', function(done) {
-			helper.setDummyData([
+			helper.setCommands([
 				{
 					command: 'install webbundle'
 				},

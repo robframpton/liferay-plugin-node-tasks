@@ -34,7 +34,7 @@
     "chai-fs": "^0.1.0",
     "del": "^2.2.0",
     "fs-extra": "^0.26.7",
-    "gogo-shell-helper": "^0.0.2",
+    "gogo-shell-helper": "^0.0.3",
     "gulp": "^3.9.1",
     "gulp-coveralls": "^0.1.4",
     "gulp-istanbul": "^0.10.3",

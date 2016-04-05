@@ -33,7 +33,7 @@ describe('GogoDeployer', function() {
 
 		before(function() {
 			helper = GogoShellHelper.start({
-				dummyData: [
+				commands: [
 					{
 						command: 'install webbundle',
 						response: 'Bundle ID: 123'
