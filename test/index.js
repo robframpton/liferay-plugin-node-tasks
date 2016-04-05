@@ -217,6 +217,7 @@ describe('Lifray Plugin Tasks', function() {
 
 			var extFunction = function(options) {
 				assert.deepEqual(options, {
+					argv: require('minimist')(process.argv.slice(2)),
 					distName: 'test-plugin-layouttpl',
 					gulp: gulp,
 					pathDist: 'dist',
