@@ -221,7 +221,11 @@ describe('Lifray Plugin Tasks', function() {
 					distName: 'test-plugin-layouttpl',
 					gulp: gulp,
 					pathDist: 'dist',
-					rootDir: 'docroot'
+					rootDir: 'docroot',
+					storeConfig: {
+						name: 'LiferayPlugin',
+						path: 'liferay-plugin.json'
+					}
 				});
 
 				done();

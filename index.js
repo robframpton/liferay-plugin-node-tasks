@@ -16,6 +16,10 @@ module.exports.registerTasks = function(options) {
 	options.distName = options.distName || path.basename(CWD);
 	options.pathDist = options.pathDist || 'dist';
 	options.rootDir = options.rootDir || 'docroot';
+	options.storeConfig = _.assign({
+		path: 'liferay-plugin.json',
+		name: 'LiferayPlugin'
+	}, options.storeConfig);
 
 	var gulp = options.gulp;
 
@@ -32,7 +36,7 @@ module.exports.registerTasks = function(options) {
 
 	var store = gulp.storage;
 
-	store.create('LiferayPlugin', path.join(CWD, 'liferay-plugin.json'));
+	store.create(options.storeConfig.name, path.join(CWD, options.storeConfig.path));
 
 	var tasks = require('./tasks/index');
 
