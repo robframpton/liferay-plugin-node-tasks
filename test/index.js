@@ -75,9 +75,9 @@ describe('Lifray Plugin Tasks', function() {
 		});
 	});
 
-	describe('plugin:deploy', function() {
+	describe('deploy', function() {
 		it('should deploy war file to specified appserver', function(done) {
-			runSequence('plugin:war', 'plugin:deploy', function() {
+			runSequence('deploy', function() {
 				assert.isFile(path.join(deployPath, 'test-plugin-layouttpl.war'));
 
 				assert(gulp.storage.get('deployed'), 'deployed is set to true');
@@ -113,7 +113,7 @@ describe('Lifray Plugin Tasks', function() {
 		});
 
 		it('should attempt to deploy via gogo shell', function(done) {
-			runSequence('plugin:war', 'plugin:deploy-gogo', function() {
+			runSequence('deploy:gogo', function() {
 				done();
 			});
 		});
@@ -134,7 +134,7 @@ describe('Lifray Plugin Tasks', function() {
 
 			gutil.log = sinon.spy();
 
-			runSequence('plugin:war', 'plugin:deploy-gogo', function() {
+			runSequence('deploy:gogo', function() {
 				assert(gutil.log.getCall(0).args[0].indexOf('Something went wrong') > -1);
 
 				gutil.log = log;

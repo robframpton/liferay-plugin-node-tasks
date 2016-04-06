@@ -9,8 +9,12 @@ var TASK_PLUGIN_DEPLOY = 'plugin:deploy';
 
 var TASK_PLUGIN_DEPLOY_GOGO = 'plugin:deploy-gogo';
 
+var TASK_PLUGIN_WAR = 'plugin:war';
+
 module.exports = function(options) {
 	var gulp = options.gulp;
+
+	var runSequence = require('run-sequence').use(gulp);
 
 	var store = gulp.storage;
 
@@ -68,6 +72,11 @@ module.exports = function(options) {
 			});
 	});
 
-	gulp.task('deploy', [TASK_PLUGIN_DEPLOY]);
-	gulp.task('deploy:gogo', [TASK_PLUGIN_DEPLOY_GOGO]);
+	gulp.task('deploy', function(cb) {
+		runSequence(TASK_PLUGIN_WAR, TASK_PLUGIN_DEPLOY, cb);
+	});
+
+	gulp.task('deploy:gogo', function(cb) {
+		runSequence(TASK_PLUGIN_WAR, TASK_PLUGIN_DEPLOY_GOGO, cb);
+	});
 };
