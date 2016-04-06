@@ -212,13 +212,14 @@ describe('Lifray Plugin Tasks', function() {
 	});
 
 	describe('registerTasks', function() {
-		it('should invoke ext functions', function(done) {
+		it('should invoke extension functions', function(done) {
 			gulp = new Gulp();
 
 			var extFunction = function(options) {
 				assert.deepEqual(options, {
 					argv: require('minimist')(process.argv.slice(2)),
 					distName: 'test-plugin-layouttpl',
+					extensions: [extFunction],
 					gulp: gulp,
 					pathDist: 'dist',
 					rootDir: 'docroot',
@@ -232,8 +233,24 @@ describe('Lifray Plugin Tasks', function() {
 			};
 
 			registerTasks({
+				extensions: extFunction,
 				gulp: gulp
-			})(extFunction);
+			});
+		});
+
+		it('should accept array of extension function', function(done) {
+			gulp = new Gulp();
+
+			var extFunction = function(options) {
+				assert.equal(options.gulp, gulp);
+
+				done();
+			};
+
+			registerTasks({
+				extensions: [extFunction],
+				gulp: gulp
+			});
 		});
 
 		it('should register hooks', function(done) {
@@ -289,14 +306,14 @@ describe('Lifray Plugin Tasks', function() {
 			var hookSpy = sinon.spy();
 
 			var hookFn = function(gulp) {
-				gulp.task('plugin:war', function(cb) {
-					hookSpy('plugin:war');
+				gulp.hook('before:plugin:war', function(cb) {
+					hookSpy('before:plugin:war');
 
 					cb();
 				});
 
-				gulp.hook('before:plugin:war', function(cb) {
-					hookSpy('before:plugin:war');
+				gulp.task('plugin:war', function(cb) {
+					hookSpy('plugin:war');
 
 					cb();
 				});
@@ -310,8 +327,8 @@ describe('Lifray Plugin Tasks', function() {
 			runSequence = require('run-sequence').use(gulp);
 
 			runSequence('plugin:war', function() {
-				assert(hookSpy.getCall(0).calledWith('plugin:war'));
-				assert(hookSpy.calledOnce);
+				assert(hookSpy.getCall(0).calledWith('before:plugin:war'));
+				assert(hookSpy.getCall(1).calledWith('plugin:war'));
 
 				done();
 			});

@@ -57,6 +57,104 @@ describe('RegisterHooks', function() {
 		});
 	});
 
+	describe('_applyHooks', function() {
+		it('should pass', function() {
+			prototype.gulp = new Gulp();
+
+			prototype.gulp.task('test', ['test2'], function(cb) {
+				cb();
+			});
+
+			prototype.gulp.task('test2', function(cb) {
+				cb();
+			});
+
+			prototype.hooks = {
+				'after:test2': _.noop,
+				'after:test3': _.noop,
+				'before:test': _.noop,
+				'invalid:test': _.noop
+			};
+
+			prototype.gulp.task = sinon.spy();
+
+			prototype._applyHooks();
+
+			assert(prototype.gulp.task.calledTwice);
+			assert(prototype.gulp.task.getCall(0).calledWith('test2', []));
+			assert(prototype.gulp.task.getCall(1).calledWith('test', ['test2']));
+		});
+	});
+
+	describe('_createTaskSequence', function() {
+		it('should create sequences that work with async methods', function(done) {
+			var sequence = prototype._createTaskSequence(_.noop, {});
+
+			assert.equal(sequence.length, 1);
+			assert(_.isFunction(sequence[0]));
+
+			var hookSpy = sinon.spy();
+
+			sequence = prototype._createTaskSequence(_.noop, {
+				after: function(cb) {
+					hookSpy();
+
+					cb();
+				}
+			});
+
+			assert.equal(sequence.length, 2);
+			assert(_.isFunction(sequence[0]));
+			assert(_.isFunction(sequence[1]));
+
+			async.series(sequence, function() {
+				assert(hookSpy.calledOnce);
+
+				done();
+			});
+		});
+	});
+
+	describe('_getTaskHookMap', function() {
+		it('should create valid taskHookMap', function() {
+			prototype.hooks = {
+				'after:build': _.noop,
+				'before:deploy': _.noop,
+				'somethingbuild:build': _.noop
+			};
+
+			var taskHookMap = prototype._getTaskHookMap();
+
+			assert.deepEqual(taskHookMap, {
+				build: {
+					after: _.noop
+				},
+				deploy: {
+					before: _.noop
+				}
+			});
+		});
+	});
+
+	describe('_getTaskName', function() {
+		it('should split hook name into correct sections', function() {
+			var array = prototype._getTaskName('after:build');
+
+			assert.equal(array[0], 'after');
+			assert.equal(array[1], 'build');
+
+			array = prototype._getTaskName('after:build:src');
+
+			assert.equal(array[0], 'after');
+			assert.equal(array[1], 'build:src');
+
+			array = prototype._getTaskName('something-else:build:base');
+
+			assert.equal(array[0], 'something-else');
+			assert.equal(array[1], 'build:base');
+		});
+	});
+
 	describe('_logHookRegister', function() {
 		it('should log message only if fn is a function', function(done) {
 			gutil.log = sinon.spy();
@@ -67,144 +165,6 @@ describe('RegisterHooks', function() {
 			assert.equal(gutil.log.callCount, 1);
 
 			done();
-		});
-	});
-
-	describe('_overwriteGulpTask', function() {
-		it('should fallback to original gulp.task if hooks are not present', function(done) {
-			prototype.gulp = {
-				tasks: {}
-			};
-			prototype.hooks = {};
-
-			var gulpTaskSpy = sinon.spy();
-
-			var gulpTask = function(name, deps, fn) {
-				fn = fn || deps;
-
-				prototype.gulp.tasks[name] = fn;
-
-				gulpTaskSpy.apply(this, arguments);
-			};
-
-			prototype.gulp.task = gulpTask;
-
-			prototype._overwriteGulpTask();
-
-			var task1Spy = sinon.spy();
-
-			prototype.gulp.task('task1', task1Spy);
-
-			assert.equal(gulpTaskSpy.callCount, 1);
-			assert(gulpTaskSpy.calledWith('task1', task1Spy), 'original task1Spy was used rather than series since no hooks were registered');
-
-			prototype.gulp.tasks['task1']();
-
-			assert.equal(task1Spy.callCount, 1);
-
-			done();
-		});
-
-		it('should create async.series for every task with registered hooks', function(done) {
-			prototype.gulp = new Gulp();
-
-			var runSequence = require('run-sequence').use(prototype.gulp);
-
-			var hookSpy = sinon.spy();
-
-			prototype.hooks = {
-				'after:task1': function(cb) {
-					hookSpy('after:task1');
-
-					cb();
-				},
-				'before:task3': function(cb) {
-					hookSpy('before:task3');
-
-					cb();
-				}
-			};
-
-			prototype._overwriteGulpTask();
-
-			prototype.gulp.task('task1', function(cb) {
-				hookSpy('task1');
-
-				cb();
-			});
-
-			prototype.gulp.task('task2', function(cb) {
-				hookSpy('task2');
-
-				cb();
-			});
-
-			prototype.gulp.task('task3', function(cb) {
-				hookSpy('task3');
-
-				cb();
-			});
-
-			runSequence('task1', 'task2', 'task3', function() {
-				assert(hookSpy.getCall(0).calledWith('task1'));
-				assert(hookSpy.getCall(1).calledWith('after:task1'));
-				assert(hookSpy.getCall(2).calledWith('task2'));
-				assert(hookSpy.getCall(3).calledWith('before:task3'));
-				assert(hookSpy.getCall(4).calledWith('task3'));
-
-				assert.equal(hookSpy.callCount, 5);
-
-				done();
-			});
-		});
-
-		it('should register deps like normal when hooking task', function(done) {
-			prototype.gulp = new Gulp();
-
-			var runSequence = require('run-sequence').use(prototype.gulp);
-
-			var hookSpy = sinon.spy();
-
-			prototype.hooks = {
-				'after:task1': function(cb) {
-					hookSpy('after:task1');
-
-					cb();
-				}
-			};
-
-			prototype._overwriteGulpTask();
-
-			prototype.gulp.task('task1', ['task2', 'task3'], function(cb) {
-				hookSpy('task1');
-
-				cb();
-			});
-
-			prototype.gulp.task('task2', function(cb) {
-				hookSpy('task2');
-
-				cb();
-			});
-
-			prototype.gulp.task('task3', function(cb) {
-				setTimeout(function() {
-					hookSpy('task3');
-
-					cb();
-				}, 200);
-			});
-
-			runSequence(['task1'], function() {
-				assert(hookSpy.getCall(0).calledWith('task2'));
-				assert(hookSpy.getCall(1).calledWith('task3'));
-				assert(hookSpy.getCall(2).calledWith('task1'));
-				assert(hookSpy.getCall(3).calledWith('after:task1'));
-
-				assert.equal(hookSpy.callCount, 4);
-
-				done();
-			});
 		});
 	});
 

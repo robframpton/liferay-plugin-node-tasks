@@ -23,13 +23,6 @@ module.exports.registerTasks = function(options) {
 
 	var gulp = options.gulp;
 
-	gulp.tasks = {};
-
-	RegisterHooks.hook(gulp, {
-		hookFn: options.hookFn,
-		hookModules: options.hookModules
-	});
-
 	gulp = help(options.gulp);
 
 	storage(gulp);
@@ -44,9 +37,18 @@ module.exports.registerTasks = function(options) {
 		task(options);
 	});
 
-	return function() {
-		_.forEach(arguments, function(ext) {
-			ext(options);
+	if (options.extensions) {
+		if (!_.isArray(options.extensions)) {
+			options.extensions = [options.extensions];
+		}
+
+		_.forEach(options.extensions, function(extension) {
+			extension(options);
 		});
-	};
+	}
+
+	RegisterHooks.hook(gulp, {
+		hookFn: options.hookFn,
+		hookModules: options.hookModules
+	});
 };
