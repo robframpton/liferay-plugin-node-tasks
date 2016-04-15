@@ -17,8 +17,8 @@ module.exports.registerTasks = function(options) {
 	options.pathDist = options.pathDist || 'dist';
 	options.rootDir = options.rootDir || 'docroot';
 	options.storeConfig = _.assign({
-		path: 'liferay-plugin.json',
-		name: 'LiferayPlugin'
+		name: 'LiferayPlugin',
+		path: 'liferay-plugin.json'
 	}, options.storeConfig);
 
 	var gulp = options.gulp;
