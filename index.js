@@ -12,14 +12,7 @@ var storage = require('gulp-storage');
 var CWD = process.cwd();
 
 module.exports.registerTasks = function(options) {
-	options.argv = minimist(process.argv.slice(2));
-	options.distName = options.distName || path.basename(CWD);
-	options.pathDist = options.pathDist || 'dist';
-	options.rootDir = options.rootDir || 'docroot';
-	options.storeConfig = _.assign({
-		name: 'LiferayPlugin',
-		path: 'liferay-plugin.json'
-	}, options.storeConfig);
+	options = require('./lib/options')(options);
 
 	var gulp = options.gulp;
 

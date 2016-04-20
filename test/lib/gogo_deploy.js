@@ -17,14 +17,22 @@ describe('GogoDeployer', function() {
 	});
 
 	describe('constructor', function() {
-		it('should construct without any custom config and set defaults', function() {
-			var gogoDeployer = new GogoDeployer();
+		it('should set connect config', function() {
+			var gogoDeployer = new GogoDeployer({
+				connectConfig: {
+					port: 1234
+				}
+			});
 
 			assert.deepEqual(gogoDeployer.connectConfig, {
-				port: 11311
+				port: 1234
 			});
 
 			assert(!gogoDeployer.ready, 'is not ready yet');
+
+			gogoDeployer = new GogoDeployer();
+
+			assert(!gogoDeployer.connectConfig, 'there is no connectConfig');
 		});
 	});
 

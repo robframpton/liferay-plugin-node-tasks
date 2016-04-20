@@ -220,6 +220,9 @@ describe('Lifray Plugin Tasks', function() {
 					argv: require('minimist')(process.argv.slice(2)),
 					distName: 'test-plugin-layouttpl',
 					extensions: [extFunction],
+					gogoShellConfig: {
+						port: 11311
+					},
 					gulp: gulp,
 					pathDist: 'dist',
 					rootDir: 'docroot',
