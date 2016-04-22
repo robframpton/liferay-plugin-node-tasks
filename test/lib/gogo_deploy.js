@@ -45,9 +45,6 @@ describe('GogoDeployer', function() {
 					{
 						command: 'install webbundle',
 						response: 'Bundle ID: 123'
-					},
-					{
-						command: 'start'
 					}
 				],
 				host: '0.0.0.0',

@@ -57,9 +57,9 @@ module.exports = function(options) {
 
 		gogoDeployer.deploy(filePath, contextPath)
 			.then(function(data) {
-				var match = data.match(/start\s(\d+)/);
+				var match = data.match(/(start|update)\s(\d+)/);
 
-				if (match && match[1] != 0) {
+				if (match && match[2] != 0) {
 					store.set('deployed', true);
 
 					gutil.log('Deployed via gogo shell');

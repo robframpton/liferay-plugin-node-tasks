@@ -98,7 +98,8 @@ describe('Lifray Plugin Tasks', function() {
 						response: 'Bundle ID: 123'
 					},
 					{
-						command: 'start'
+						command: 'lb -u',
+						response: '501|Active     |    1|webbundle:file:/portal/osgi/war/april-13-theme.war?Web-ContextPath=/april-13-theme'
 					}
 				]
 			});
