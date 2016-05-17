@@ -83,7 +83,7 @@ describe('GogoDeployer', function() {
 		it('should create web bundle install command', function() {
 			var webBundleURL = prototype._formatWebBundleURL('/some/path/to/file.war', 'context-path');
 
-			assert.equal(webBundleURL, 'webbundle:file:///some/path/to/file.war?Web-ContextPath=context-path');
+			assert.equal(webBundleURL, 'webbundle:file:///some/path/to/file.war?Web-ContextPath=/context-path');
 		});
 
 		it('should properly format windows path', function() {
@@ -97,7 +97,7 @@ describe('GogoDeployer', function() {
 
 			var webBundleURL = prototype._formatWebBundleURL('c:\\some\\path\\to\\file.war', 'context-path');
 
-			assert.equal(webBundleURL, 'webbundle:file:/c:/some/path/to/file.war?Web-ContextPath=context-path');
+			assert.equal(webBundleURL, 'webbundle:file:/c:/some/path/to/file.war?Web-ContextPath=/context-path');
 
 			path.sep = sep;
 		});
@@ -127,7 +127,7 @@ describe('GogoDeployer', function() {
 
 			assert.equal(promise, 'promise');
 
-			assert(prototype.sendCommand.calledWith('install', 'webbundle:file:///some/path/to/file.war?Web-ContextPath=context-path'));
+			assert(prototype.sendCommand.calledWith('install', 'webbundle:file:///some/path/to/file.war?Web-ContextPath=/context-path'));
 		});
 	});
 
