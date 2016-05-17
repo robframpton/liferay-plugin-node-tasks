@@ -85,6 +85,22 @@ describe('GogoDeployer', function() {
 
 			assert.equal(webBundleURL, 'webbundle:file:///some/path/to/file.war?Web-ContextPath=context-path');
 		});
+
+		it('should properly format windows path', function() {
+			var sep = path.sep;
+
+			path.sep = '\\';
+
+			prototype._isWin = function() {
+				return true;
+			};
+
+			var webBundleURL = prototype._formatWebBundleURL('c:\\some\\path\\to\\file.war', 'context-path');
+
+			assert.equal(webBundleURL, 'webbundle:file:/c:/some/path/to/file.war?Web-ContextPath=context-path');
+
+			path.sep = sep;
+		});
 	});
 
 	describe('_getWebBundleIdFromResponse', function() {
