@@ -101,6 +101,12 @@ describe('GogoDeployer', function() {
 
 			path.sep = sep;
 		});
+
+		it('should escape whitespace', function() {
+			var webBundleURL = prototype._formatWebBundleURL('/Users/person/path to/theme.war', 'context-path');
+
+			assert.equal(webBundleURL, 'webbundle:file:///Users/person/path%20to/theme.war?Web-ContextPath=/context-path');
+		});
 	});
 
 	describe('_getWebBundleIdFromResponse', function() {
