@@ -1,13 +1,11 @@
 'use strict';
 
 var _ = require('lodash');
-var gutil = require('gulp-util');
 var help = require('gulp-help');
-var InitPrompt = require('./lib/init_prompt');
-var minimist = require('minimist');
 var path = require('path');
-var RegisterHooks = require('./lib/register_hooks');
 var storage = require('gulp-storage');
+
+var RegisterHooks = require('./lib/register_hooks');
 
 var CWD = process.cwd();
 
