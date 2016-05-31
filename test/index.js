@@ -379,5 +379,19 @@ describe('Lifray Plugin Tasks', function() {
 				done();
 			});
 		});
+
+		it('should use distName as template if delimiters are present', function(done) {
+			gulp = new Gulp();
+
+			registerTasks({
+				distName: '${name}-${version}-${liferayPlugin.version}',
+				extensions: function(options) {
+					assert.equal(options.distName, 'test-plugin-layouttpl-1.2.3-7.0');
+
+					done();
+				},
+				gulp: gulp
+			});
+		});
 	});
 });
