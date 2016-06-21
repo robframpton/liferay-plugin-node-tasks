@@ -14,8 +14,50 @@
     "node": ">=0.10.0"
   },
   "scripts": {
+    "ava": "nyc ava",
     "coveralls": "gulp coveralls",
     "test": "gulp test"
+  },
+  "ava": {
+    "files": [
+      "ava_test/index.js",
+      "ava_test/{lib,tasks}/**/*.js"
+    ]
+  },
+  "nyc": {
+    "include": [
+      "index.js",
+      "{lib,tasks}/**/*"
+    ],
+    "reporter": [
+      "lcov",
+      "text"
+    ]
+  },
+  "xo": {
+    "rules": {
+      "brace-style": "off",
+      "import/order": [
+        "error",
+        {
+          "groups": [
+            [
+              "builtin",
+              "external"
+            ],
+            [
+              "internal",
+              "parent",
+              "sibling",
+              "index"
+            ]
+          ]
+        }
+      ],
+      "max-lines": "off",
+      "space-before-function-paren": "off",
+      "xo/filename-case": "off"
+    }
   },
   "license": "MIT",
   "dependencies": {
@@ -32,15 +74,17 @@
     "run-sequence": "^1.1.5"
   },
   "devDependencies": {
+    "ava": "^0.15.2",
     "chai": "^1.10.0",
     "chai-fs": "^0.1.0",
     "del": "^2.2.0",
     "fs-extra": "^0.26.7",
-    "gogo-shell-helper": "^0.0.6",
+    "gogo-shell-helper": "^0.0.8",
     "gulp": "^3.9.1",
     "gulp-coveralls": "^0.1.4",
     "gulp-istanbul": "^0.10.3",
     "gulp-mocha": "^2.2.0",
+    "nyc": "^6.6.1",
     "sinon": "^1.17.3"
   }
 }
