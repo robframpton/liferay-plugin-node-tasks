@@ -2,273 +2,250 @@
 
 var _ = require('lodash');
 var async = require('async');
-var chai = require('chai');
 var EventEmitter = require('events').EventEmitter;
 var Gulp = require('gulp').Gulp;
 var gutil = require('gulp-util');
 var path = require('path');
-var RegisterHooks = require('../../lib/register_hooks');
 var sinon = require('sinon');
+var test = require('ava');
 
-var assert = chai.assert;
+var RegisterHooks = require('../../lib/register_hooks');
 
 var STR_NOT_A_FUNCTION = 'not a function';
 
-describe('RegisterHooks', function() {
-	var prototype;
+var prototype;
 
-	beforeEach(function() {
-		prototype = _.create(RegisterHooks.prototype);
+test.beforeEach(function() {
+	prototype = _.create(RegisterHooks.prototype);
+});
+
+test.cb('_addToSequence should add function to sequence differently based on if cb is expected or stream is returned', function(t) {
+	var sequence = [];
+
+	var spy = sinon.spy();
+
+	prototype._addToSequence(sequence, function(cb) {
+		spy();
+
+		cb();
 	});
 
-	describe('_addToSequence', function() {
-		it('should add function to sequence differently based on if cb is expected or stream is returned', function(done) {
-			var sequence = [];
+	prototype._addToSequence(sequence, function() {
+		var eventEmitter = new EventEmitter();
 
-			var spy = sinon.spy();
+		setTimeout(function() {
+			spy();
 
-			prototype._addToSequence(sequence, function(cb) {
-				spy();
+			eventEmitter.emit('end');
+		}, 200);
 
-				cb();
-			});
-
-			prototype._addToSequence(sequence, function() {
-				var eventEmitter = new EventEmitter();
-
-				setTimeout(function() {
-					spy();
-
-					eventEmitter.emit('end');
-				}, 200);
-
-				return eventEmitter;
-			});
-
-			prototype._addToSequence(sequence, STR_NOT_A_FUNCTION);
-
-			assert.equal(sequence.length, 2);
-
-			async.series(sequence, function() {
-				assert.equal(spy.callCount, 2);
-
-				done();
-			});
-		});
+		return eventEmitter;
 	});
 
-	describe('_applyHooks', function() {
-		it('should pass', function() {
-			prototype.gulp = new Gulp();
+	prototype._addToSequence(sequence, STR_NOT_A_FUNCTION);
 
-			prototype.gulp.task('test', ['test2'], function(cb) {
-				cb();
-			});
+	t.is(sequence.length, 2);
 
-			prototype.gulp.task('test2', function(cb) {
-				cb();
-			});
+	async.series(sequence, function() {
+		t.is(spy.callCount, 2);
 
-			prototype.hooks = {
-				'after:test2': _.noop,
-				'after:test3': _.noop,
-				'before:test': _.noop,
-				'invalid:test': _.noop
-			};
+		t.end();
+	});
+});
 
-			prototype.gulp.task = sinon.spy();
+test('_applyHooks should pass', function(t) {
+	prototype.gulp = new Gulp();
 
-			prototype._applyHooks();
-
-			assert(prototype.gulp.task.calledTwice);
-			assert(prototype.gulp.task.getCall(0).calledWith('test2', []));
-			assert(prototype.gulp.task.getCall(1).calledWith('test', ['test2']));
-		});
+	prototype.gulp.task('test', ['test2'], function(cb) {
+		cb();
 	});
 
-	describe('_createTaskSequence', function() {
-		it('should create sequences that work with async methods', function(done) {
-			var sequence = prototype._createTaskSequence(_.noop, {});
-
-			assert.equal(sequence.length, 1);
-			assert(_.isFunction(sequence[0]));
-
-			var hookSpy = sinon.spy();
-
-			sequence = prototype._createTaskSequence(_.noop, {
-				after: function(cb) {
-					hookSpy();
-
-					cb();
-				}
-			});
-
-			assert.equal(sequence.length, 2);
-			assert(_.isFunction(sequence[0]));
-			assert(_.isFunction(sequence[1]));
-
-			async.series(sequence, function() {
-				assert(hookSpy.calledOnce);
-
-				done();
-			});
-		});
+	prototype.gulp.task('test2', function(cb) {
+		cb();
 	});
 
-	describe('_getTaskHookMap', function() {
-		it('should create valid taskHookMap', function() {
-			prototype.hooks = {
-				'after:build': _.noop,
-				'before:deploy': _.noop,
-				'somethingbuild:build': _.noop
-			};
+	prototype.hooks = {
+		'after:test2': _.noop,
+		'after:test3': _.noop,
+		'before:test': _.noop,
+		'invalid:test': _.noop
+	};
 
-			var taskHookMap = prototype._getTaskHookMap();
+	prototype.gulp.task = sinon.spy();
 
-			assert.deepEqual(taskHookMap, {
-				build: {
-					after: _.noop
-				},
-				deploy: {
-					before: _.noop
-				}
-			});
-		});
+	prototype._applyHooks();
+
+	t.true(prototype.gulp.task.calledTwice);
+	t.true(prototype.gulp.task.getCall(0).calledWith('test2', []));
+	t.true(prototype.gulp.task.getCall(1).calledWith('test', ['test2']));
+});
+
+test.cb('_createTaskSequence should create sequences that work with async methods', function(t) {
+	var sequence = prototype._createTaskSequence(_.noop, {});
+
+	t.is(sequence.length, 1);
+	t.true(_.isFunction(sequence[0]));
+
+	var hookSpy = sinon.spy();
+
+	sequence = prototype._createTaskSequence(_.noop, {
+		after: function(cb) {
+			hookSpy();
+
+			cb();
+		}
 	});
 
-	describe('_getTaskName', function() {
-		it('should split hook name into correct sections', function() {
-			var array = prototype._getTaskName('after:build');
+	t.is(sequence.length, 2);
+	t.true(_.isFunction(sequence[0]));
+	t.true(_.isFunction(sequence[1]));
 
-			assert.equal(array[0], 'after');
-			assert.equal(array[1], 'build');
+	async.series(sequence, function() {
+		t.true(hookSpy.calledOnce);
 
-			array = prototype._getTaskName('after:build:src');
-
-			assert.equal(array[0], 'after');
-			assert.equal(array[1], 'build:src');
-
-			array = prototype._getTaskName('something-else:build:base');
-
-			assert.equal(array[0], 'something-else');
-			assert.equal(array[1], 'build:base');
-		});
+		t.end();
 	});
+});
 
-	describe('_logHookRegister', function() {
-		it('should log message only if fn is a function', function(done) {
-			gutil.log = sinon.spy();
+test('_getTaskHookMap should create valid taskHookMap', function(t) {
+	prototype.hooks = {
+		'after:build': _.noop,
+		'before:deploy': _.noop,
+		'somethingbuild:build': _.noop
+	};
 
-			prototype._logHookRegister('test', _.noop);
-			prototype._logHookRegister('test', STR_NOT_A_FUNCTION);
+	var taskHookMap = prototype._getTaskHookMap();
 
-			assert.equal(gutil.log.callCount, 1);
-
-			done();
-		});
+	t.deepEqual(taskHookMap, {
+		build: {
+			after: _.noop
+		},
+		deploy: {
+			before: _.noop
+		}
 	});
+});
 
-	describe('_registerHookFn', function() {
-		it('should register hookFn if it is a function and log message if defined as anything else', function(done) {
-			gutil.log = sinon.spy();
+test('_getTaskName should split hook name into correct sections', function(t) {
+	var array = prototype._getTaskName('after:build');
 
-			prototype._registerHookFn();
+	t.is(array[0], 'after');
+	t.is(array[1], 'build');
 
-			assert.equal(gutil.log.callCount, 0);
+	array = prototype._getTaskName('after:build:src');
 
-			prototype.hookFn = STR_NOT_A_FUNCTION;
+	t.is(array[0], 'after');
+	t.is(array[1], 'build:src');
 
-			prototype._registerHookFn();
+	array = prototype._getTaskName('something-else:build:base');
 
-			assert.equal(gutil.log.callCount, 1);
+	t.is(array[0], 'something-else');
+	t.is(array[1], 'build:base');
+});
 
-			prototype.gulp = 'gulp';
-			prototype.hookFn = sinon.spy();
+test.cb('_logHookRegister should log message only if fn is a function', function(t) {
+	gutil.log = sinon.spy();
 
-			prototype._registerHookFn();
+	prototype._logHookRegister('test', _.noop);
+	prototype._logHookRegister('test', STR_NOT_A_FUNCTION);
 
-			assert.equal(gutil.log.callCount, 1);
-			assert(prototype.hookFn.calledWith('gulp'));
+	t.is(gutil.log.callCount, 1);
 
-			done();
-		});
-	});
+	t.end();
+});
 
-	describe('_registerHookModule', function() {
-		it('should register hook or log appropriate log messages', function(done) {
-			gutil.log = sinon.spy();
+test.cb('_registerHookFn should register hookFn if it is a function and log message if defined as anything else', function(t) {
+	gutil.log = sinon.spy();
 
-			prototype._registerHookModule('non-existent-module');
+	prototype._registerHookFn();
 
-			assert(gutil.log.calledWithMatch('There was an issue registering'));
-			assert.equal(gutil.log.callCount, 1);
+	t.is(gutil.log.callCount, 0);
 
-			var moduleHook = require(path.join(__dirname, '../fixtures/hook_modules/hook-module-1'));
+	prototype.hookFn = STR_NOT_A_FUNCTION;
 
-			prototype.gulp = {
-				hook: sinon.spy()
-			};
+	prototype._registerHookFn();
 
-			prototype._registerHookModule(path.join(__dirname, '../fixtures/hook_modules/hook-module-1'));
+	t.is(gutil.log.callCount, 1);
 
-			assert(prototype.gulp.hook.calledWith('before:build'));
-			assert.equal(prototype.gulp.hook.callCount, 1);
+	prototype.gulp = 'gulp';
+	prototype.hookFn = sinon.spy();
 
-			gutil.log = sinon.spy();
+	prototype._registerHookFn();
 
-			prototype._registerHookModule(path.join(__dirname, '../fixtures/hook_modules/hook-module-3'));
+	t.is(gutil.log.callCount, 1);
+	t.true(prototype.hookFn.calledWith('gulp'));
 
-			assert(gutil.log.calledWithMatch('does not return a function. All hook modules must return a function.'));
-			assert.equal(gutil.log.callCount, 1);
+	t.end();
+});
 
-			done();
-		});
-	});
+test.cb('_registerHookModule should register hook or log appropriate log messages', function(t) {
+	gutil.log = sinon.spy();
 
-	describe('_registerHookModules', function() {
-		it('should accept single or multiple hook modules and register them', function(done) {
-			var hookModule1Path = path.join(__dirname, '../fixtures/hook_modules/hook-module-1');
-			var hookModule2Path = path.join(__dirname, '../fixtures/hook_modules/hook-module-2');
-			var hookModule3Path = path.join(__dirname, '../fixtures/hook_modules/hook-module-3');
+	prototype._registerHookModule('non-existent-module');
 
-			prototype._registerHookModule = sinon.spy();
-			prototype.hookModules = hookModule1Path;
+	t.true(gutil.log.calledWithMatch('There was an issue registering'));
+	t.is(gutil.log.callCount, 1);
 
-			prototype._registerHookModules();
+	var moduleHook = require(path.join(__dirname, '../fixtures/hook_modules/hook-module-1'));
 
-			assert(prototype._registerHookModule.calledWithMatch(hookModule1Path));
-			assert.equal(prototype._registerHookModule.callCount, 1);
+	prototype.gulp = {
+		hook: sinon.spy()
+	};
 
-			prototype._registerHookModule = sinon.spy();
-			prototype.hookModules = [hookModule1Path, hookModule2Path, hookModule3Path];
+	prototype._registerHookModule(path.join(__dirname, '../fixtures/hook_modules/hook-module-1'));
 
-			prototype._registerHookModules();
+	t.true(prototype.gulp.hook.calledWith('before:build'));
+	t.is(prototype.gulp.hook.callCount, 1);
 
-			assert(prototype._registerHookModule.getCall(0).calledWith(hookModule1Path), 'called with module 1 path');
-			assert(prototype._registerHookModule.getCall(1).calledWith(hookModule2Path), 'called with module 2 path');
-			assert(prototype._registerHookModule.getCall(2).calledWith(hookModule3Path), 'called with module 3 path');
-			assert.equal(prototype._registerHookModule.callCount, 3);
+	gutil.log = sinon.spy();
 
-			done();
-		});
-	});
+	prototype._registerHookModule(path.join(__dirname, '../fixtures/hook_modules/hook-module-3'));
 
-	describe('_registerHooks', function() {
-		it('should create gulp.hook function that adds hook to hooks object', function(done) {
-			prototype.gulp = {};
-			prototype._registerHooks();
+	t.true(gutil.log.calledWithMatch('does not return a function. All hook modules must return a function.'));
+	t.is(gutil.log.callCount, 1);
 
-			assert(_.isFunction(prototype.gulp.hook))
+	t.end();
+});
 
-			prototype.hooks = {};
+test.cb('_registerHookModules should accept single or multiple hook modules and register them', function(t) {
+	var hookModule1Path = path.join(__dirname, '../fixtures/hook_modules/hook-module-1');
+	var hookModule2Path = path.join(__dirname, '../fixtures/hook_modules/hook-module-2');
+	var hookModule3Path = path.join(__dirname, '../fixtures/hook_modules/hook-module-3');
 
-			prototype.gulp.hook('hook1', _.noop);
-			prototype.gulp.hook('hook2', _.noop);
+	prototype._registerHookModule = sinon.spy();
+	prototype.hookModules = hookModule1Path;
 
-			assert.equal(prototype.hooks.hook1, _.noop);
-			assert.equal(prototype.hooks.hook2, _.noop);
+	prototype._registerHookModules();
 
-			done();
-		});
-	});
+	t.true(prototype._registerHookModule.calledWithMatch(hookModule1Path));
+	t.is(prototype._registerHookModule.callCount, 1);
+
+	prototype._registerHookModule = sinon.spy();
+	prototype.hookModules = [hookModule1Path, hookModule2Path, hookModule3Path];
+
+	prototype._registerHookModules();
+
+	t.true(prototype._registerHookModule.getCall(0).calledWith(hookModule1Path), 'called with module 1 path');
+	t.true(prototype._registerHookModule.getCall(1).calledWith(hookModule2Path), 'called with module 2 path');
+	t.true(prototype._registerHookModule.getCall(2).calledWith(hookModule3Path), 'called with module 3 path');
+	t.is(prototype._registerHookModule.callCount, 3);
+
+	t.end();
+});
+
+test.cb('_registerHooks should create gulp.hook function that adds hook to hooks object', function(t) {
+	prototype.gulp = {};
+	prototype._registerHooks();
+
+	t.true(_.isFunction(prototype.gulp.hook))
+
+	prototype.hooks = {};
+
+	prototype.gulp.hook('hook1', _.noop);
+	prototype.gulp.hook('hook2', _.noop);
+
+	t.is(prototype.hooks.hook1, _.noop);
+	t.is(prototype.hooks.hook2, _.noop);
+
+	t.end();
 });

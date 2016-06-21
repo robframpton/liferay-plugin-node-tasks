@@ -1,397 +1,251 @@
 'use strict';
 
-var _ = require('lodash');
 var chai = require('chai');
 var del = require('del');
 var fs = require('fs-extra');
-var GogoShellHelper = require('gogo-shell-helper');
 var Gulp = require('gulp').Gulp;
 var os = require('os');
 var path = require('path');
-var registerTasks;
 var sinon = require('sinon');
+var test = require('ava');
 
 var gulp = new Gulp();
 
 chai.use(require('chai-fs'));
+
 var assert = chai.assert;
 
 var tempPath = path.join(os.tmpdir(), 'liferay-plugin-tasks', 'test-plugin-layouttpl');
 
 var deployPath = path.join(tempPath, '../appserver/deploy');
 
-describe('Lifray Plugin Tasks', function() {
-	var runSequence;
+var initCwd = process.cwd();
+var registerTasks;
+var runSequence;
 
-	before(function(done) {
-		this.timeout(10000);
+test.cb.before(function(t) {
+	fs.copy(path.join(__dirname, './fixtures/plugins/test-plugin-layouttpl'), tempPath, function(err) {
+		if (err) {
+			throw err;
+		}
 
-		var instance = this;
+		process.chdir(tempPath);
 
-		instance._initCwd = process.cwd();
+		registerTasks = require('../index').registerTasks;
 
-		fs.copy(path.join(__dirname, './fixtures/plugins/test-plugin-layouttpl'), tempPath, function(err) {
-			if (err) throw err;
-
-			process.chdir(tempPath);
-
-			registerTasks = require('../index').registerTasks;
-
-			registerTasks({
-				gulp: gulp,
-				gogoShellConfig: {
-					host: '0.0.0.0',
-					port: 1337
-				}
-			});
-
-			runSequence = require('run-sequence').use(gulp);
-
-			var store = gulp.storage;
-
-			store.set('deployPath', deployPath);
-
-			fs.mkdirsSync(deployPath);
-
-			done();
-		});
-	});
-
-	after(function(done) {
-		var instance = this;
-
-		del([path.join(tempPath, '**')], {
-			force: true
-		}).then(function() {
-			process.chdir(instance._initCwd);
-
-			done();
-		});
-	});
-
-	afterEach(function() {
-		del.sync(path.join(deployPath, '**'), {
-			force: true
-		});
-	});
-
-	describe('deploy', function() {
-		it('should deploy war file to specified appserver', function(done) {
-			runSequence('deploy', function() {
-				assert.isFile(path.join(deployPath, 'test-plugin-layouttpl.war'));
-
-				assert(gulp.storage.get('deployed'), 'deployed is set to true');
-
-				done();
-			});
-		});
-	});
-
-	describe('plugin:deploy-gogo', function() {
-		var helper;
-
-		before(function() {
-			helper = GogoShellHelper.start({
-				commands: [
-					{
-						command: 'install webbundle',
-						response: 'Bundle ID: 123'
-					},
-					{
-						command: 'lb -u',
-						response: '501|Active     |    1|webbundle:file:/portal/osgi/war/april-13-theme.war?Web-ContextPath=/april-13-theme'
-					}
-				]
-			});
-		});
-
-		after(function() {
-			try {
-				helper.close();
-			}
-			catch (e) {
+		registerTasks({
+			gulp: gulp,
+			gogoShellConfig: {
+				host: '0.0.0.0',
+				port: 1337
 			}
 		});
 
-		it('should attempt to deploy via gogo shell', function(done) {
-			runSequence('deploy:gogo', function() {
-				done();
-			});
+		runSequence = require('run-sequence').use(gulp);
+
+		var store = gulp.storage;
+
+		store.set('deployPath', deployPath);
+
+		fs.mkdirsSync(deployPath);
+
+		t.end();
+	});
+});
+
+test.cb.after(function(t) {
+	del([path.join(tempPath, '**')], {
+		force: true
+	}).then(function() {
+		process.chdir(initCwd);
+
+		t.end();
+	});
+});
+
+test.afterEach(function() {
+	del.sync(path.join(deployPath, '**'), {
+		force: true
+	});
+});
+
+test.cb.serial('registerTasks should invoke extension functions', function(t) {
+	gulp = new Gulp();
+
+	var extFunction = function(options) {
+		t.deepEqual(options, {
+			argv: require('minimist')(process.argv.slice(2)),
+			distName: 'test-plugin-layouttpl',
+			extensions: [extFunction],
+			gogoShellConfig: {
+				port: 11311
+			},
+			gulp: gulp,
+			pathDist: 'dist',
+			rootDir: 'docroot',
+			storeConfig: {
+				name: 'LiferayPlugin',
+				path: 'liferay-plugin.json'
+			}
 		});
 
-		it('should log error', function(done) {
-			helper.setCommands([
-				{
-					command: 'install webbundle'
-				},
-				{
-					command: 'start'
-				}
-			]);
+		t.end();
+	};
 
-			var gutil = require('gulp-util');
+	registerTasks({
+		extensions: extFunction,
+		gulp: gulp
+	});
+});
 
-			var log = gutil.log;
+test.cb.serial('registerTasks should accept array of extension function', function(t) {
+	gulp = new Gulp();
 
-			gutil.log = sinon.spy();
+	var extFunction = function(options) {
+		t.is(options.gulp, gulp);
 
-			runSequence('deploy:gogo', function() {
-				assert(gutil.log.getCall(0).args[0].indexOf('Something went wrong') > -1);
+		t.end();
+	};
 
-				gutil.log = log;
+	registerTasks({
+		extensions: [extFunction],
+		gulp: gulp
+	});
+});
 
-				done();
-			});
+test.cb.serial('registerTasks should register hooks', function(t) {
+	gulp = new Gulp();
+
+	var hookSpy = sinon.spy();
+
+	var hookFn = function(gulp) {
+		gulp.hook('before:plugin:war', function(cb) {
+			hookSpy('before:plugin:war');
+
+			cb();
 		});
 
-		it('should log error due to disconnection', function(done) {
-			helper.close();
+		gulp.hook('after:plugin:war', function(cb) {
+			hookSpy('after:plugin:war');
 
-			var gutil = require('gulp-util');
-
-			var log = gutil.log;
-
-			gutil.log = sinon.spy();
-
-			runSequence('plugin:war', 'plugin:deploy-gogo', function() {
-				assert(gutil.log.getCall(0).args[0].indexOf('ECONNREFUSED') > -1);
-
-				gutil.log = log;
-
-				done();
-			});
+			cb();
 		});
+
+		gulp.hook('after:plugin:deploy', function(cb) {
+			hookSpy('after:plugin:deploy');
+
+			cb();
+		});
+	};
+
+	registerTasks({
+		gulp: gulp,
+		hookFn: hookFn
 	});
 
-	describe('plugin:init', function() {
-		it('should prompt user for appserver information', function() {
-			var InitPrompt = require('../lib/init_prompt');
+	gulp.storage.set('deployPath', deployPath);
 
-			var _prompt = InitPrompt.prototype._prompt;
+	runSequence = require('run-sequence').use(gulp);
 
-			InitPrompt.prototype._prompt = sinon.spy();
+	runSequence('plugin:war', 'plugin:deploy', function() {
+		assert.isFile(path.join(deployPath, 'test-plugin-layouttpl.war'));
 
-			runSequence('plugin:init', _.noop);
+		t.true(gulp.storage.get('deployed'), 'deployed is set to true');
 
-			assert(InitPrompt.prototype._prompt.calledOnce, '_prompt was invoked');
+		t.true(hookSpy.getCall(0).calledWith('before:plugin:war'));
+		t.true(hookSpy.getCall(1).calledWith('after:plugin:war'));
+		t.true(hookSpy.getCall(2).calledWith('after:plugin:deploy'));
 
-			var args = InitPrompt.prototype._prompt.getCall(0).args;
+		t.end();
+	});
+});
 
-			assert.deepEqual(args[0].store, gulp.storage);
-			assert(_.endsWith(args[0].appServerPathDefault, 'tomcat'), 'it adds tomcat to default path');
+test.cb.serial('registerTasks should register hooks for extension tasks', function(t) {
+	gulp = new Gulp();
 
-			InitPrompt.prototype._prompt = _prompt;
+	var hookSpy = sinon.spy();
+
+	var hookFn = function(gulp) {
+		gulp.hook('before:plugin:war', function(cb) {
+			hookSpy('before:plugin:war');
+
+			cb();
 		});
+
+		gulp.hook('after:my-custom:task', function(cb) {
+			hookSpy('after:my-custom:task');
+
+			cb();
+		});
+	};
+
+	registerTasks({
+		extensions: function(options) {
+			options.gulp.task('my-custom:task', function(cb) {
+				hookSpy('my-custom:task');
+
+				cb();
+			});
+		},
+		gulp: gulp,
+		hookFn: hookFn
 	});
 
-	describe('plugin:war', function() {
-		it('should build war file', function(done) {
-			runSequence('plugin:war', function() {
-				assert.isFile(path.join(tempPath, 'dist', 'test-plugin-layouttpl.war'));
+	runSequence = require('run-sequence').use(gulp);
 
-				done();
-			});
+	runSequence('plugin:war', 'my-custom:task', function() {
+		t.true(hookSpy.getCall(0).calledWith('before:plugin:war'));
+		t.true(hookSpy.getCall(1).calledWith('my-custom:task'));
+		t.true(hookSpy.getCall(2).calledWith('after:my-custom:task'));
+
+		t.end();
+	});
+});
+
+test.cb.serial('registerTasks should overwrite task', function(t) {
+	gulp = new Gulp();
+
+	var hookSpy = sinon.spy();
+
+	var hookFn = function(gulp) {
+		gulp.hook('before:plugin:war', function(cb) {
+			hookSpy('before:plugin:war');
+
+			cb();
 		});
 
-		it('should use name for war file and pathDist for alternative dist location', function(done) {
-			gulp = new Gulp();
+		gulp.task('plugin:war', function(cb) {
+			hookSpy('plugin:war');
 
-			registerTasks({
-				distName: 'my-plugin-name',
-				gulp: gulp,
-				pathDist: 'dist_alternative'
-			});
-
-			runSequence = require('run-sequence').use(gulp);
-
-			runSequence('plugin:war', function() {
-				assert.isFile(path.join(tempPath, 'dist_alternative', 'my-plugin-name.war'));
-
-				done();
-			});
+			cb();
 		});
+	};
+
+	registerTasks({
+		gulp: gulp,
+		hookFn: hookFn
 	});
 
-	describe('registerTasks', function() {
-		it('should invoke extension functions', function(done) {
-			gulp = new Gulp();
+	runSequence = require('run-sequence').use(gulp);
 
-			var extFunction = function(options) {
-				assert.deepEqual(options, {
-					argv: require('minimist')(process.argv.slice(2)),
-					distName: 'test-plugin-layouttpl',
-					extensions: [extFunction],
-					gogoShellConfig: {
-						port: 11311
-					},
-					gulp: gulp,
-					pathDist: 'dist',
-					rootDir: 'docroot',
-					storeConfig: {
-						name: 'LiferayPlugin',
-						path: 'liferay-plugin.json'
-					}
-				});
+	runSequence('plugin:war', function() {
+		t.true(hookSpy.getCall(0).calledWith('before:plugin:war'));
+		t.true(hookSpy.getCall(1).calledWith('plugin:war'));
 
-				done();
-			};
+		t.end();
+	});
+});
 
-			registerTasks({
-				extensions: extFunction,
-				gulp: gulp
-			});
-		});
+test.cb.serial('registerTasks should use distName as template if delimiters are present', function(t) {
+	gulp = new Gulp();
 
-		it('should accept array of extension function', function(done) {
-			gulp = new Gulp();
+	registerTasks({
+		distName: '${name}-${version}-${liferayPlugin.version}',
+		extensions: function(options) {
+			t.is(options.distName, 'test-plugin-layouttpl-1.2.3-7.0');
 
-			var extFunction = function(options) {
-				assert.equal(options.gulp, gulp);
-
-				done();
-			};
-
-			registerTasks({
-				extensions: [extFunction],
-				gulp: gulp
-			});
-		});
-
-		it('should register hooks', function(done) {
-			gulp = new Gulp();
-
-			var hookSpy = sinon.spy();
-
-			var hookFn = function(gulp) {
-				gulp.hook('before:plugin:war', function(cb) {
-					hookSpy('before:plugin:war');
-
-					cb();
-				});
-
-				gulp.hook('after:plugin:war', function(cb) {
-					hookSpy('after:plugin:war');
-
-					cb();
-				});
-
-				gulp.hook('after:plugin:deploy', function(cb) {
-					hookSpy('after:plugin:deploy');
-
-					cb();
-				});
-			};
-
-			registerTasks({
-				gulp: gulp,
-				hookFn: hookFn
-			});
-
-			gulp.storage.set('deployPath', deployPath);
-
-			runSequence = require('run-sequence').use(gulp);
-
-			runSequence('plugin:war', 'plugin:deploy', function() {
-				assert.isFile(path.join(deployPath, 'test-plugin-layouttpl.war'));
-
-				assert(gulp.storage.get('deployed'), 'deployed is set to true');
-
-				assert(hookSpy.getCall(0).calledWith('before:plugin:war'));
-				assert(hookSpy.getCall(1).calledWith('after:plugin:war'));
-				assert(hookSpy.getCall(2).calledWith('after:plugin:deploy'));
-
-				done();
-			});
-		});
-
-		it('should register hooks for extension tasks', function(done) {
-			gulp = new Gulp();
-
-			var hookSpy = sinon.spy();
-
-			var hookFn = function(gulp) {
-				gulp.hook('before:plugin:war', function(cb) {
-					hookSpy('before:plugin:war');
-
-					cb();
-				});
-
-				gulp.hook('after:my-custom:task', function(cb) {
-					hookSpy('after:my-custom:task');
-
-					cb();
-				});
-			};
-
-			registerTasks({
-				extensions: function(options) {
-					options.gulp.task('my-custom:task', function(cb) {
-						hookSpy('my-custom:task');
-
-						cb();
-					});
-				},
-				gulp: gulp,
-				hookFn: hookFn
-			});
-
-			runSequence = require('run-sequence').use(gulp);
-
-			runSequence('plugin:war', 'my-custom:task', function() {
-				assert(hookSpy.getCall(0).calledWith('before:plugin:war'));
-				assert(hookSpy.getCall(1).calledWith('my-custom:task'));
-				assert(hookSpy.getCall(2).calledWith('after:my-custom:task'));
-
-				done();
-			});
-		});
-
-		it('should overwrite task', function(done) {
-			gulp = new Gulp();
-
-			var hookSpy = sinon.spy();
-
-			var hookFn = function(gulp) {
-				gulp.hook('before:plugin:war', function(cb) {
-					hookSpy('before:plugin:war');
-
-					cb();
-				});
-
-				gulp.task('plugin:war', function(cb) {
-					hookSpy('plugin:war');
-
-					cb();
-				});
-			};
-
-			registerTasks({
-				gulp: gulp,
-				hookFn: hookFn
-			});
-
-			runSequence = require('run-sequence').use(gulp);
-
-			runSequence('plugin:war', function() {
-				assert(hookSpy.getCall(0).calledWith('before:plugin:war'));
-				assert(hookSpy.getCall(1).calledWith('plugin:war'));
-
-				done();
-			});
-		});
-
-		it('should use distName as template if delimiters are present', function(done) {
-			gulp = new Gulp();
-
-			registerTasks({
-				distName: '${name}-${version}-${liferayPlugin.version}',
-				extensions: function(options) {
-					assert.equal(options.distName, 'test-plugin-layouttpl-1.2.3-7.0');
-
-					done();
-				},
-				gulp: gulp
-			});
-		});
+			t.end();
+		},
+		gulp: gulp
 	});
 });

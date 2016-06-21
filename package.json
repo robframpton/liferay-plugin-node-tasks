@@ -14,14 +14,12 @@
     "node": ">=0.10.0"
   },
   "scripts": {
-    "ava": "nyc ava",
-    "coveralls": "gulp coveralls",
-    "test": "gulp test"
+    "test": "nyc ava"
   },
   "ava": {
     "files": [
-      "ava_test/index.js",
-      "ava_test/{lib,tasks}/**/*.js"
+      "test/index.js",
+      "test/{lib,tasks}/**/*.js"
     ]
   },
   "nyc": {
@@ -80,10 +78,6 @@
     "del": "^2.2.0",
     "fs-extra": "^0.26.7",
     "gogo-shell-helper": "^0.0.8",
-    "gulp": "^3.9.1",
-    "gulp-coveralls": "^0.1.4",
-    "gulp-istanbul": "^0.10.3",
-    "gulp-mocha": "^2.2.0",
     "nyc": "^6.6.1",
     "sinon": "^1.17.3"
   }
