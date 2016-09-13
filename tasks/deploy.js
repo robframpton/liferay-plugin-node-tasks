@@ -5,11 +5,11 @@ var path = require('path');
 
 var chalk = gutil.colors;
 
+var TASK_BUILD = 'build';
+
 var TASK_PLUGIN_DEPLOY = 'plugin:deploy';
 
 var TASK_PLUGIN_DEPLOY_GOGO = 'plugin:deploy-gogo';
-
-var TASK_PLUGIN_WAR = 'plugin:war';
 
 module.exports = function(options) {
 	var gulp = options.gulp;
@@ -73,10 +73,10 @@ module.exports = function(options) {
 	});
 
 	gulp.task('deploy', function(cb) {
-		runSequence(TASK_PLUGIN_WAR, TASK_PLUGIN_DEPLOY, cb);
+		runSequence(TASK_BUILD, TASK_PLUGIN_DEPLOY, cb);
 	});
 
 	gulp.task('deploy:gogo', function(cb) {
-		runSequence(TASK_PLUGIN_WAR, TASK_PLUGIN_DEPLOY_GOGO, cb);
+		runSequence(TASK_BUILD, TASK_PLUGIN_DEPLOY_GOGO, cb);
 	});
 };
