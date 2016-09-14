@@ -89,11 +89,13 @@ test.cb('_createTaskSequence should create sequences that work with async method
 	var hookSpy = sinon.spy();
 
 	sequence = prototype._createTaskSequence(_.noop, {
-		after: function(cb) {
-			hookSpy();
+		after: [
+			function(cb) {
+				hookSpy();
 
-			cb();
-		}
+				cb();
+			}
+		]
 	});
 
 	t.is(sequence.length, 2);
@@ -243,9 +245,10 @@ test.cb('_registerHooks should create gulp.hook function that adds hook to hooks
 
 	prototype.gulp.hook('hook1', _.noop);
 	prototype.gulp.hook('hook2', _.noop);
+	prototype.gulp.hook('hook2', _.noop);
 
-	t.is(prototype.hooks.hook1, _.noop);
-	t.is(prototype.hooks.hook2, _.noop);
+	t.deepEqual(prototype.hooks.hook1, [_.noop]);
+	t.deepEqual(prototype.hooks.hook2, [_.noop, _.noop]);
 
 	t.end();
 });
