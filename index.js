@@ -40,6 +40,7 @@ module.exports.registerTasks = function(options) {
 
 	RegisterHooks.hook(gulp, {
 		hookFn: options.hookFn,
-		hookModules: options.hookModules
+		hookModules: options.hookModules,
+		options: options
 	});
 };

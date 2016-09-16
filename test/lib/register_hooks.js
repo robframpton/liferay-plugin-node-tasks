@@ -171,11 +171,12 @@ test.cb('_registerHookFn should register hookFn if it is a function and log mess
 
 	prototype.gulp = 'gulp';
 	prototype.hookFn = sinon.spy();
+	prototype.options = 'options';
 
 	prototype._registerHookFn();
 
 	t.is(gutil.log.callCount, 1);
-	t.true(prototype.hookFn.calledWith('gulp'));
+	t.true(prototype.hookFn.calledWithExactly('gulp', 'options'));
 
 	t.end();
 });
@@ -199,7 +200,7 @@ test.cb('_registerHookModule should register hook or log appropriate log message
 	t.true(prototype.gulp.hook.calledWith('before:build'));
 	t.is(prototype.gulp.hook.callCount, 1);
 
-	gutil.log = sinon.spy();
+	gutil.log.reset();
 
 	prototype._registerHookModule(path.join(__dirname, '../fixtures/hook_modules/hook-module-3'));
 
@@ -207,6 +208,20 @@ test.cb('_registerHookModule should register hook or log appropriate log message
 	t.is(gutil.log.callCount, 1);
 
 	t.end();
+});
+
+test('_registerHookModule should pass correct arguments to hook modules', function(t) {
+	var hookModulePath = path.join(__dirname, '../fixtures/hook_modules/hook-module-4');
+
+	var moduleHook = require(hookModulePath)().reset();
+
+	prototype.gulp = 'gulp';
+	prototype.options = 'options';
+
+	prototype._registerHookModule(hookModulePath);
+
+	t.true(moduleHook.calledWithExactly('gulp', 'options'));
+	t.is(moduleHook.callCount, 1);
 });
 
 test.cb('_registerHookModules should accept single or multiple hook modules and register them', function(t) {
