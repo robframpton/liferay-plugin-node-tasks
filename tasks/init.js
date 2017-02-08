@@ -2,6 +2,7 @@
 
 var InitPrompt = require('../lib/init_prompt');
 var path = require('path');
+var argv = require('minimist')(process.argv.slice(2));
 
 var TASK_PLUGIN_INIT = 'plugin:init';
 
@@ -13,7 +14,9 @@ module.exports = function(options) {
 	gulp.task(TASK_PLUGIN_INIT, function(cb) {
 		new InitPrompt({
 			appServerPathDefault: store.get('appServerPath') || path.join(path.dirname(process.cwd()), 'tomcat'),
-			store: store
+			store: store,
+			appServerPathArgv: argv.appServerPath,
+			urlArgv: argv.url
 		}, cb);
 	});
 
