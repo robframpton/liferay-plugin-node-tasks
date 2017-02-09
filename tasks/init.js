@@ -2,7 +2,6 @@
 
 var InitPrompt = require('../lib/init_prompt');
 var path = require('path');
-var argv = require('minimist')(process.argv.slice(2));
 
 var TASK_PLUGIN_INIT = 'plugin:init';
 
@@ -15,8 +14,7 @@ module.exports = function(options) {
 		new InitPrompt({
 			appServerPathDefault: store.get('appServerPath') || path.join(path.dirname(process.cwd()), 'tomcat'),
 			store: store,
-			appServerPathArgv: argv.appServerPath,
-			urlArgv: argv.url
+			argv: options.argv
 		}, cb);
 	});
 
