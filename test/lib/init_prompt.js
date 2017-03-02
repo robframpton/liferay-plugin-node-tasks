@@ -169,7 +169,19 @@ test('_validateAppServerPath should properly validate path and return appropriat
 
 	t.true(/doesn't appear to be an app server directory/.test(retVal));
 
-	retVal = prototype._validateAppServerPath(defaultAnswers.appServerPath);
+	retVal = prototype._validateAppServerPath(path.join(__dirname, '../fixtures/server/glassfish'));
 
-	t.true(retVal, 'path is valid');
+	t.true(retVal, 'glassfish path is valid');
+
+	retVal = prototype._validateAppServerPath(path.join(__dirname, '../fixtures/server/jboss'));
+
+	t.true(retVal, 'jboss path is valid');
+
+	retVal = prototype._validateAppServerPath(path.join(__dirname, '../fixtures/server/tomcat'));
+
+	t.true(retVal, 'tomcat path is valid');
+
+	retVal = prototype._validateAppServerPath(path.join(__dirname, '../fixtures/server/wildfly'));
+
+	t.true(retVal, 'wildfly path is valid');
 });
