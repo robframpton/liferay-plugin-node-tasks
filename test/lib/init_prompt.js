@@ -172,8 +172,4 @@ test('_validateAppServerPath should properly validate path and return appropriat
 	retVal = prototype._validateAppServerPath(defaultAnswers.appServerPath);
 
 	t.true(retVal, 'path is valid');
-
-	retVal = prototype._validateAppServerPath(defaultAnswers.webappsPath);
-
-	t.true(retVal, 'pointing to webapps is valid');
 });
