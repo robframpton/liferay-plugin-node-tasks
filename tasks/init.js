@@ -13,7 +13,8 @@ module.exports = function(options) {
 	gulp.task(TASK_PLUGIN_INIT, function(cb) {
 		new InitPrompt({
 			appServerPathDefault: store.get('appServerPath') || path.join(path.dirname(process.cwd()), 'tomcat'),
-			store: store
+			store: store,
+			argv: options.argv
 		}, cb);
 	});
 

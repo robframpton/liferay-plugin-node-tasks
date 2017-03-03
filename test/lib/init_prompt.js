@@ -19,6 +19,15 @@ function getDefaultAnswers() {
 	};
 }
 
+function getOptionsForArgv() {
+	return {
+		argv: {
+			appServerPath: path.join(__dirname, '../fixtures/server/tomcat'),
+			url: 'http://localhost:8080'
+		}
+	};
+}
+
 test.before(function() {
 	process.chdir(path.join(__dirname, '../..'));
 
@@ -148,6 +157,29 @@ test('_prompt should invoke inquirer.prompt with correct args', function(t) {
 	t.true(_.isFunction(args[1]), 'second argument is a callback function');
 
 	inquirer.prompt = prompt;
+});
+
+test('_appServerPathWhen should properly determine when to prompt for appServerPath', function(t){
+	var options = getOptionsForArgv();
+	var validate = prototype._validateAppServerPath;
+	var result = prototype._appServerPathWhen(options, validate)({});
+
+	t.false(result, 'should not prompt for input');
+
+	result = prototype._appServerPathWhen({argv: {}}, validate)({});
+	
+	t.true(result, 'should prompt for input when no argv provided');
+});
+
+test('_urlWhen should properly determine when to prompt for url', function(t){
+	var options = getOptionsForArgv();
+	var result = prototype._urlWhen(options)({});
+
+	t.false(result, 'should not prompt for input');
+
+	result = prototype._urlWhen({argv: {}})({});
+	
+	t.true(result, 'should prompt for input when no argv provided');
 });
 
 test('_validateAppServerPath should properly validate path and return appropriate messages if invalid', function(t) {
