@@ -82,7 +82,7 @@ test.cb.serial('registerTasks should invoke extension functions', function(t) {
 			},
 			gulp: gulp,
 			pathDist: 'dist',
-			rootDir: 'docroot',
+			pathSrc: 'docroot',
 			storeConfig: {
 				name: 'LiferayPlugin',
 				path: 'liferay-plugin.json'
